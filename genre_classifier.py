@@ -16,6 +16,12 @@ from keras.layers import Convolution1D, GlobalMaxPooling1D
 
 from sklearn import preprocessing
 
+from sklearn import svm
+from sklearn import metrics
+
+import matplotlib.pyplot as plt
+from matplotlib import style
+
 MFCC_FEATURES_N = 12
 LPC_N = 10
 CHROMA_N = 12
@@ -133,7 +139,43 @@ def train_on_np_array():
 
     return model
 
+def train_on_multiclass_svm():
+    df = json_to_np_array("feature_data.json")
+    
+    # split into input and corresponding labels
+    x_data = df[:, 1:]
+    y_data = df[:, 0]
+    print y_data
+    # convert class vectors to binary class matrices
+    # y_data = np_utils.to_categorical(y_data, nb_classes)
 
+    print x_data.shape
+    print y_data.shape
+    
+    x_train, x_test, y_train, y_test = train_test_split(x_data, y_data, test_size=0.3, random_state=42)
+
+    scaler = preprocessing.StandardScaler().fit(x_train)
+
+    x_train = scaler.transform(x_train)
+    x_test = scaler.transform(x_test)
+    
+    #plt.scatter(x_data,y_data)
+    #plt.show()
+    
+    # fit SVM model
+    clf = svm.SVC(decision_function_shape='ovo')
+    clf.fit(x_train, y_train)
+    
+    predicted = clf.predict(x_test)
+    
+    # summarize the fit of the model
+    # print("expected: ",y_test," predicted: ",predicted)
+    print(metrics.classification_report(y_test, predicted))
+    
+    return clf
+    
+    
+    
 def train_on_np_3d_array():
     df = json_to_np_array("feature_data.json")
     num_points, num_features = df.shape
@@ -194,7 +236,8 @@ if __name__=="__main__":
     # keras_model = train_on_df()
 
     # For training using numpy array
-    keras_model = train_on_np_array()
+    # keras_model = train_on_np_array()
+    svm_model = train_on_multiclass_svm()
     # keras_model = train_on_np_3d_array()
     # save_model(keras_model)
 
