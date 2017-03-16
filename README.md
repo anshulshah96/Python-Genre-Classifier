@@ -10,7 +10,7 @@ Setup
 
 1. Clone the Repository.
 ```shell
-https://github.com/anshulshah96/Python-Genre-Classifier
+git clone https://github.com/anshulshah96/Python-Genre-Classifier
 ```
 
 2. Install [Anaconda](https://www.continuum.io/downloads#linux). Preferably Python 2.7.

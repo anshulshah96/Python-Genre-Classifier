@@ -132,10 +132,14 @@ def train_on_np_array():
 
     model = get_keras_model()
 
-    history = model.fit(x_train, y_train, nb_epoch=50, batch_size=32)
+    history = model.fit(x_train, y_train, nb_epoch=30, batch_size=32)
+    predicted  = model.predict(x_test)
+
     loss_and_metrics = model.evaluate(x_test, y_test, batch_size=32)
 
     print loss_and_metrics
+    # print np.argmax(predicted,axis = 1).shape
+    print(metrics.classification_report(np.argmax(y_test,axis = 1), np.argmax(predicted,axis = 1) ))
 
     return model
 
@@ -236,7 +240,7 @@ if __name__=="__main__":
     # keras_model = train_on_df()
 
     # For training using numpy array
-    # keras_model = train_on_np_array()
+    keras_model = train_on_np_array()
     svm_model = train_on_multiclass_svm()
     # keras_model = train_on_np_3d_array()
     # save_model(keras_model)
