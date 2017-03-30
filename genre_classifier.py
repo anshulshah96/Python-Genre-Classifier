@@ -17,6 +17,7 @@ from keras.layers import Dense, Dropout, Activation, Flatten
 from keras.layers import Conv2D, MaxPooling2D
 
 
+
 #old lib
 from keras.layers import Convolution2D, MaxPooling2D
 
@@ -24,9 +25,6 @@ from sklearn import preprocessing
 
 from sklearn import svm
 from sklearn import metrics
-
-import matplotlib.pyplot as plt
-from matplotlib import style
 
 MFCC_FEATURES_N = 12
 LPC_N = 10
@@ -93,16 +91,18 @@ def get_keras_model4(np_array):
     model.add(Convolution2D(16, 3, 3, activation='relu',input_shape=np_array.shape[1:] ))
     model.add(Convolution2D(16, 3, 3, activation='relu'))
     model.add(MaxPooling2D(pool_size=(2,2)))
-    model.add(Dropout(0.2))
+    model.add(Dropout(0.3))
      
     model.add(Flatten())
+    model.add(Dense(64, activation='relu'))
+    model.add(Dropout(0.3))
     model.add(Dense(32, activation='relu'))
-    model.add(Dropout(0.2))
+    model.add(Dropout(0.3))
     model.add(Dense(nb_classes, activation='softmax'))
      
     # 8. Compile model
     model.compile(loss='categorical_crossentropy',
-                  optimizer='adam',
+                  optimizer=RMSprop(),
                   metrics=['accuracy'])
     return model
 
@@ -235,7 +235,9 @@ def to_cat(data):
     return y_data2
 
 def train_on_spectra():
-    df = np.load('/mnt/2082D50C82D4E6F6/DATA/np/song_spectra_np_min_2.npy')
+    from config import *
+
+    df = np.load(np_data_path+'song_spectra_np.npy')
     np.random.shuffle(df)
     
     x_data = df[:, : , 1:]
@@ -299,7 +301,7 @@ def train_on_np_3d_array():
     y_data = np.array([f_element[0] for f_element in y_data])
     print x_data.shape, y_data.shape
 
-    x_train, x_test, y_train, y_test = train_test_split(x_data, y_data, test_size=0.3, random_state=42)
+    x_train, x_test, y_train, y_test = train_test_split(x_data, y_data, test_size=0.8, random_state=42)
     
     # model = get_keras_model2()
     x_train2 = x_train.reshape((x_train.shape[0], 1,x_train.shape[1],x_train.shape[2]))
@@ -307,8 +309,8 @@ def train_on_np_3d_array():
 
     model = get_keras_model4(x_train2)
 
-    # history = model.fit(x_train2, y_train, nb_epoch=5, batch_size=32)
-    y_test_op = model.predict(x_test2,batch_size=32)
+    history = model.fit(x_train2, y_train, nb_epoch=5, batch_size=32)
+    y_test_op = model.predict(x_test2, batch_size=32)
     print(y_test_op[:30 , :])
     print(y_test[:30 , :])
     loss_and_metrics = model.evaluate(x_test2, y_test, batch_size=32)

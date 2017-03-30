@@ -93,3 +93,6 @@ ENV/
 /data
 /scripts
 /papers
+
+config.py
+out.txt
