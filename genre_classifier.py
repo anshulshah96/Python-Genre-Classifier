@@ -13,6 +13,12 @@ from keras.layers.core import Dense, Dropout, Activation
 from keras.optimizers import RMSprop
 from keras.utils import np_utils
 from keras.layers import Convolution1D, GlobalMaxPooling1D
+from keras.layers import Dense, Dropout, Activation, Flatten
+from keras.layers import Conv2D, MaxPooling2D
+
+
+#old lib
+from keras.layers import Convolution2D, MaxPooling2D
 
 from sklearn import preprocessing
 
@@ -56,6 +62,49 @@ def get_keras_model2():
 
     return model
 
+def get_keras_model3(np_array):
+    model = Sequential()
+
+    model.add(Conv2D(32, 3, 3 , input_shape=np_array.shape[1:] ))
+    model.add(Activation('relu'))
+    model.add(Conv2D(32, 3, 3))
+    model.add(Activation('relu'))
+    model.add(MaxPooling2D(pool_size=(2, 2)))
+    model.add(Dropout(0.25))
+
+    model.add(Conv2D(64, 3, 3 ))
+    model.add(Activation('relu'))
+    model.add(Conv2D(64, 3, 3))
+    model.add(Activation('relu'))
+    model.add(MaxPooling2D(pool_size=(2, 2)))
+    model.add(Dropout(0.25))
+
+    model.add(Flatten())
+    model.add(Dense(128, activation='relu'))
+    model.add(Dropout(0.5))
+    model.add(Dense(10, activation='softmax'))
+    model.compile(loss='categorical_crossentropy',
+              optimizer='rmsprop',
+              metrics=['accuracy'])
+    return model
+
+def get_keras_model4(np_array):
+    model = Sequential()
+    model.add(Convolution2D(16, 3, 3, activation='relu',input_shape=np_array.shape[1:] ))
+    model.add(Convolution2D(16, 3, 3, activation='relu'))
+    model.add(MaxPooling2D(pool_size=(2,2)))
+    model.add(Dropout(0.2))
+     
+    model.add(Flatten())
+    model.add(Dense(32, activation='relu'))
+    model.add(Dropout(0.2))
+    model.add(Dense(nb_classes, activation='softmax'))
+     
+    # 8. Compile model
+    model.compile(loss='categorical_crossentropy',
+                  optimizer='adam',
+                  metrics=['accuracy'])
+    return model
 
 def transform(features):
     feature = []
@@ -177,12 +226,48 @@ def train_on_multiclass_svm():
     print(metrics.classification_report(y_test, predicted))
     
     return clf
+
+def to_cat(data):
+    y_data2 = np.zeros((data.shape[0],nb_classes))
+    for i in range(data.shape[0]):
+        # print y_data2[i,int(data[i])]
+        y_data2[i,int(data[i])] = 1
+    return y_data2
+
+def train_on_spectra():
+    df = np.load('/mnt/2082D50C82D4E6F6/DATA/np/song_spectra_np_min_2.npy')
+    np.random.shuffle(df)
     
-    
-    
+    x_data = df[:, : , 1:]
+    x_data = x_data / 95
+    y_data = df[:, 1 , 0].reshape((df.shape[0]))
+
+    # scaler = preprocessing.StandardScaler().fit(x_data)
+    # x_data = scaler.transform(x_data)
+
+    print(x_data.shape, y_data.shape)
+
+    y_data = to_cat(y_data)
+
+    x_train, x_test, y_train, y_test = train_test_split(x_data, y_data, test_size=0.3, random_state=42)
+
+    x_train2 = x_train.reshape((x_train.shape[0], 1,x_train.shape[1],x_train.shape[2]))
+    x_test2 = x_test.reshape((x_test.shape[0], 1,x_test.shape[1],x_test.shape[2]))
+
+    model = get_keras_model4(x_train2)
+    history = model.fit(x_train2, y_train, nb_epoch=5, batch_size=32)
+    y_test_op = model.predict(x_test2,batch_size=32)
+    print(y_test_op[:10,:])
+    print(y_test[:10,:])
+    loss_and_metrics = model.evaluate(x_test2, y_test, batch_size=32)
+
+    print loss_and_metrics
+
+    return model
+  
 def train_on_np_3d_array():
     df = json_to_np_array("feature_data.json")
-    num_points, num_features = df.shape
+
     num_segments = 10
 
     # split into input and corresponding labels
@@ -193,7 +278,9 @@ def train_on_np_3d_array():
     x_data = scaler.transform(x_data)
 
     # convert class vectors to binary class matrices
-    y_data = np_utils.to_categorical(y_data, nb_classes)
+    print y_data.shape
+    y_data = to_cat(y_data)
+    # y_data = np_utils.to_categorical(y_data, nb_classes)
 
     print x_data.shape, y_data.shape
     
@@ -214,10 +301,17 @@ def train_on_np_3d_array():
 
     x_train, x_test, y_train, y_test = train_test_split(x_data, y_data, test_size=0.3, random_state=42)
     
-    model = get_keras_model2()
+    # model = get_keras_model2()
+    x_train2 = x_train.reshape((x_train.shape[0], 1,x_train.shape[1],x_train.shape[2]))
+    x_test2 = x_test.reshape((x_test.shape[0], 1,x_test.shape[1],x_test.shape[2]))
 
-    history = model.fit(x_train, y_train, nb_epoch=10, batch_size=32)
-    loss_and_metrics = model.evaluate(x_test, y_test, batch_size=32)
+    model = get_keras_model4(x_train2)
+
+    # history = model.fit(x_train2, y_train, nb_epoch=5, batch_size=32)
+    y_test_op = model.predict(x_test2,batch_size=32)
+    print(y_test_op[:30 , :])
+    print(y_test[:30 , :])
+    loss_and_metrics = model.evaluate(x_test2, y_test, batch_size=32)
 
     print loss_and_metrics
 
@@ -240,9 +334,11 @@ if __name__=="__main__":
     # keras_model = train_on_df()
 
     # For training using numpy array
-    keras_model = train_on_np_array()
-    svm_model = train_on_multiclass_svm()
-    # keras_model = train_on_np_3d_array()
+
+    # keras_model = train_on_np_array()
+    # svm_model = train_on_multiclass_svm()
+     # keras_model = train_on_np_3d_array()
+    skeras_model = train_on_spectra()
     # save_model(keras_model)
 
 

@@ -13,7 +13,7 @@ GENRES = ['blues', 'classical', 'country', 'disco', 'hiphop', 'jazz', 'metal',
           'pop', 'reggae', 'rock']
 
 N_SEGMENTS = 100
-N_COL = 3300
+N_COL = 1000
 # WINDOW_SIZE = 16384 # about 0.36 ms
 # MAX_SEGMENTS = 40
 
@@ -53,8 +53,6 @@ def extract_features(song_path, N_SEGMENTS = 100):
     # By Time Duration
     fixed_frames = song_data.frames(len(song_data) // N_SEGMENTS, np.hamming)
     fixed_frames = fixed_frames[:N_SEGMENTS-1]
-
-
     
     # By Window Size
     # fixed_frames = song_data.frames( WINDOW_SIZE, np.hamming)
@@ -96,10 +94,10 @@ if __name__ == '__main__':
     song_features_dataset = pd.DataFrame()
 
     data_np3 = np.empty((0,99,N_COL), 'float32')
-    for genre_name in GENRES:
+    for genre_name in GENRES[:10]:
         song_paths = sorted(get_genre_songs_path(genre_name))
         print("Processing songs of {0} genre...".format(genre_name))
-        for index, song_path in enumerate(song_paths):
+        for index, song_path in enumerate(song_paths[:30]):
             song_data = extract_features(song_path)
             # data_np3 = data_np3.append(dasong_data)
             data_np3 = np.append(data_np3, song_data, axis=0)
@@ -107,4 +105,5 @@ if __name__ == '__main__':
             sys.stdout.write(show_progress_bar(index))
             sys.stdout.flush()
     print(data_np3.shape)
-    np.save('/mnt/2082D50C82D4E6F6/DATA/np/song_spectra_np.npy',data_np3)
+    
+    np.save('/mnt/2082D50C82D4E6F6/DATA/np/song_spectra_np_min_2.npy',data_np3)
