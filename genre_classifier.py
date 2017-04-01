@@ -320,15 +320,15 @@ def train_on_np_3d_array():
     return model
 
 
-def save_model(keras_model):
-    keras_model.save('data/keras_model_1.h5')
+def save_model(keras_model,name):
+    keras_model.save('data/keras_model_'+name+'.h5')
 
-    keras_model.save_weights('data/keras_model_1_weights')
+    # keras_model.save_weights('data/keras_model_weights_'+name)
     
-    json_string = keras_model.to_json()
-    text_file = open("data/keras_model_1", "w")
-    text_file.write(json_string)
-    text_file.close()
+    # json_string = keras_model.to_json()
+    # text_file = open("data/keras_model_"+name, "w")
+    # text_file.write(json_string)
+    # text_file.close()
 
 
 if __name__=="__main__":
@@ -339,9 +339,9 @@ if __name__=="__main__":
 
     # keras_model = train_on_np_array()
     # svm_model = train_on_multiclass_svm()
-     # keras_model = train_on_np_3d_array()
+    # keras_model = train_on_np_3d_array()
     skeras_model = train_on_spectra()
-    # save_model(keras_model)
+    save_model(keras_model,"CNN1")
 
 
 
